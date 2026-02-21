@@ -1,0 +1,5 @@
+{
+  "name": "VidStream - Modern Video Sharing",
+  "description": "A sleek, YouTube-inspired video sharing platform featuring authentication, video uploads with previews, and a responsive player.",
+  "requestFramePermissions": []
+}
