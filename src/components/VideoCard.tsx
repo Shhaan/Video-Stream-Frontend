@@ -25,7 +25,7 @@ export function VideoCard(props: any) {
     >
       <Link to={`/video/${video.id}`} className="relative aspect-video overflow-hidden rounded-xl bg-muted">
         <img
-          src={video.thumbnail}
+          src={video.cover_image}
           alt={video.title}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           referrerPolicy="no-referrer"

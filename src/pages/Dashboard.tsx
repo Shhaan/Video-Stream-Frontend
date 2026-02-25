@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mockApi } from '../lib/api';
+import { mockApi,api_video } from '../lib/api';
 import { VideoCard } from '../components/VideoCard';
 import { LayoutGrid, List, Filter } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -11,7 +11,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await mockApi.getVideos();
+        const response = await api_video.get("/get-videos/");
         setVideos(response.data);
       } catch (error) {
         console.error('Failed to fetch videos:', error);

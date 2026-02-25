@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { mockApi } from '../lib/api';
+import { data, useNavigate } from 'react-router-dom';
+import { mockApi, api_video } from '../lib/api';
 import { Upload, X, FileVideo, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,12 +12,20 @@ export default function UploadPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [dragCounter, setDragCounter] = useState(0);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleFileChange = (e: any) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      if (!selectedFile.type.startsWith('video/')) {
+        toast.error('Please upload a valid video file.');
+        return;
+      }
       if (selectedFile.size > 50 * 1024 * 1024) { // 50MB limit for demo
         toast.error('File size too large. Max 50MB allowed.');
         return;
@@ -28,20 +36,55 @@ export default function UploadPage() {
     }
   };
 
+  const handleDragEnter = (e: any) => {
+    e.preventDefault();
+    setDragCounter(prev => prev + 1);
+  };
+
+  const handleDragLeave = (e: any) => {
+    e.preventDefault();
+    setDragCounter(prev => prev - 1);
+  };
+
   const handleDragOver = (e: any) => {
     e.preventDefault();
   };
 
   const handleDrop = (e: any) => {
     e.preventDefault();
+    setDragCounter(0);
     const selectedFile = e.dataTransfer.files?.[0];
     if (selectedFile && selectedFile.type.startsWith('video/')) {
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        toast.error('File size too large. Max 50MB allowed.');
+        return;
+      }
       setFile(selectedFile);
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
     } else {
       toast.error('Please upload a valid video file.');
     }
+  };
+
+  const handleCoverChange = (e: any) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (!selectedFile.type.startsWith('image/')) {
+        toast.error('Please select a valid image file.');
+        return;
+      }
+      setCoverImage(selectedFile);
+      const url = URL.createObjectURL(selectedFile);
+      setCoverPreviewUrl(url);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setCoverImage(null);
+    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    setCoverPreviewUrl(null);
+    if (coverInputRef.current) coverInputRef.current.value = '';
   };
 
   const handleRemoveFile = () => {
@@ -61,10 +104,18 @@ export default function UploadPage() {
     setIsUploading(true);
 
     try {
-      await mockApi.uploadVideo(
-        { title, description, videoUrl: previewUrl },
-        (progress) => setUploadProgress(progress)
-      );
+      const formData = new FormData();
+
+      formData.append("video", file as File);          // video file
+      formData.append("cover_image", coverImage as File); // cover image
+      formData.append("title", title);
+      formData.append("description", description);
+
+      await api_video.post("/upload-video/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       toast.success('Video uploaded successfully!');
       navigate('/');
     } catch (error: any) {
@@ -86,8 +137,11 @@ export default function UploadPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div
               onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center p-12 text-center ${
+              onClick={() => { if (dragCounter === 0) fileInputRef.current?.click(); }}
+              className={`relative border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center p-12 text-center cursor-pointer ${
                 file ? 'border-primary/50 bg-primary/5' : 'border-muted hover:border-primary/50 hover:bg-muted/50'
               }`}
             >
@@ -119,15 +173,8 @@ export default function UploadPage() {
                   </div>
                   <h3 className="text-lg font-semibold">Select video to upload</h3>
                   <p className="text-sm text-muted-foreground mt-1 mb-6">
-                    Or drag and drop a file here
+                    Click to select or drag and drop a file here
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-6 py-2.5 bg-primary text-white font-medium rounded-full hover:bg-primary/90 transition-colors"
-                  >
-                    Select File
-                  </button>
                 </>
               )}
               <input
@@ -139,6 +186,39 @@ export default function UploadPage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cover Image</label>
+              <div className="flex items-center gap-4">
+                {coverPreviewUrl ? (
+                  <div className="relative">
+                    <img src={coverPreviewUrl} alt="Cover" className="w-32 h-24 object-cover rounded-lg border" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveCover}
+                      className="absolute -top-2 -right-2 p-1 bg-destructive text-white rounded-full hover:bg-destructive/90"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => coverInputRef.current?.click()}
+                    className="w-32 h-24 border-2 border-dashed border-muted rounded-lg flex items-center justify-center hover:border-primary/50 transition-colors"
+                  >
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                  </button>
+                )}
+                <input
+                  type="file"
+                  ref={coverInputRef}
+                  onChange={handleCoverChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
@@ -148,7 +228,7 @@ export default function UploadPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Give your video a catchy title"
-                  className="w-full h-11 px-4 rounded-xl bg-muted/50 border-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full h-11 px-4 rounded-xl bg-muted/50 border border-black focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
 
@@ -160,7 +240,7 @@ export default function UploadPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What's your video about?"
-                  className="w-full p-4 rounded-xl bg-muted/50 border-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                  className="w-full p-4 rounded-xl bg-muted/50 border border-black focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                 />
               </div>
             </div>
@@ -194,8 +274,8 @@ export default function UploadPage() {
 
             <button
               type="submit"
-              disabled={isUploading || !file}
-              className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              disabled={isUploading || !file || !title.trim() || !description.trim()}
+              className="w-full h-12 bg-primary text-black font-semibold rounded-xl hover:bg-primary/90   transition-all flex items-center justify-center gap-2"
             >
               {isUploading ? (
                 <>
@@ -203,7 +283,7 @@ export default function UploadPage() {
                   Processing...
                 </>
               ) : (
-                'Publish Video'
+                'Upload Video'
               )}
             </button>
           </form>

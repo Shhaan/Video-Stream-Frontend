@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { mockApi } from '../lib/api';
+import { data, Link, useNavigate } from 'react-router-dom';
+import { api_auth, mockApi } from '../lib/api';
 import { useAuth } from '../components/AuthProvider';
 import { Video, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,9 +18,15 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await mockApi.login({ email, password });
-      login(response.data.user, response.data.token);
-      toast.success('Welcome back, ' + response.data.user.name + '!');
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      const response = await api_auth.post(
+        "/api/v1/auth/login/",
+        formData
+      );
+      login(response.data?.data);
+      toast.success('Welcome back, ' + response.data?.data?.name + '!');
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Login failed. Please try again.');
@@ -66,7 +72,6 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <label className="text-sm font-medium">Password</label>
-                <Link to="#" className="text-xs text-primary hover:underline">Forgot password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -84,7 +89,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-6"
+              className="w-full h-11 bg-primary border-solid-2-black text-white font-semibold rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-6"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

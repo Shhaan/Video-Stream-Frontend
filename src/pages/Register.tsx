@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockApi } from '../lib/api';
+import { api_auth, mockApi } from '../lib/api';
 import { Video, Mail, Lock, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
@@ -29,9 +29,15 @@ export default function Register() {
 
     setIsLoading(true);
 
+    const newFormData = new FormData();
+    newFormData.append('name', formData.name);
+    newFormData.append('email', formData.email);
+    newFormData.append('password', formData.password);
+
     try {
-      await mockApi.register(formData);
+      await api_auth.post('/api/v1/user/create-user/',  newFormData );
       toast.success('Registration successful! Please login.');
+      
       navigate('/login');
     } catch (error: any) {
       toast.error(error.message || 'Registration failed');

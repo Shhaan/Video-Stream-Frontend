@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { mockApi } from '../lib/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { api_video, mockApi } from '../lib/api';
 import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, MessageSquare, UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
+import VideoHsl from '../components/VideoHsl';
 
 export default function VideoPlayer() {
   const { id } = useParams<{ id: string }>();
   const [video, setVideo] = useState<any>(null);
+  const [recommendedvideo, setRecommendedvideo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        const response = await mockApi.getVideos();
-        const found = response.data.find((v: any) => v.id === id);
+        const response = await api_video.get('/get-videos/?id=' + id);
+        const found = response.data 
         setVideo(found);
       } catch (error) {
         console.error('Failed to fetch video:', error);
@@ -22,6 +24,18 @@ export default function VideoPlayer() {
         setIsLoading(false);
       }
     };
+        const fetchRecommendedVideo = async () => {
+      try {
+        const response = await api_video.get('/get-videos/?exclude_id=' + id);
+        const found = response.data 
+        setRecommendedvideo(found);
+      } catch (error) {
+        console.error('Failed to fetch video:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecommendedVideo()
     fetchVideo();
   }, [id]);
 
@@ -49,13 +63,11 @@ export default function VideoPlayer() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-            <video
-              src={video.videoUrl}
-              className="w-full h-full"
-              controls
-              autoPlay
-              poster={video.thumbnail}
-            />
+           
+           
+           <VideoHsl key={video.id} src={video.hls_url} />
+           
+
           </div>
 
           <div className="space-y-4">
@@ -146,11 +158,13 @@ export default function VideoPlayer() {
 
         <div className="space-y-4">
           <h3 className="font-bold text-lg mb-4">Up next</h3>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex gap-3 group cursor-pointer">
+           {recommendedvideo &&recommendedvideo.map((video: any, i: number) => (
+             
+          
+            <div key={i} onClick={()=>navigate(`/video/${video.id}`)} className="flex gap-3 group cursor-pointer">
               <div className="relative w-40 shrink-0 aspect-video rounded-lg overflow-hidden bg-muted">
                 <img 
-                  src={`https://picsum.photos/seed/${i + 10}/200/112`} 
+                  src={video.cover_image} 
                   alt="Thumbnail" 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   referrerPolicy="no-referrer"
@@ -161,7 +175,7 @@ export default function VideoPlayer() {
               </div>
               <div className="flex flex-col gap-1 min-w-0">
                 <h4 className="text-sm font-bold line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                  Recommended Video Title {i + 1}
+                  {video.title}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-1">Creator Channel</p>
                 <p className="text-xs text-muted-foreground">120K views • 1 day ago</p>

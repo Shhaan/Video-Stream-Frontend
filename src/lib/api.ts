@@ -1,21 +1,54 @@
 import axios from 'axios';
+import { navigateTo } from "../utils/navigation";
 
-const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'https://api.example.com';
+const API_BASE_URL_AUTH = (import.meta as any).env.VITE_API_BASE_URL_AUTH  ;
+const API_BASE_URL_VIDEO = (import.meta as any).env.VITE_API_BASE_URL_VIDEO ;
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+const api_auth = axios.create({
+  baseURL: API_BASE_URL_AUTH,
+  withCredentials: true,
 });
 
-// Add a request interceptor to attach JWT token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+const api_video = axios.create({
+  baseURL: API_BASE_URL_VIDEO,
+  withCredentials: true,
+});
+
+
+api_video.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      (error.response?.status === 401 ||
+        (error.response?.status === 403 &&
+          (error.response?.data?.detail ===
+            "Authentication credentials were not provided." ||
+            error.response?.data?.detail === "Invalid or expired token"))) &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        await api_auth.post("/api/v1/auth/refresh/");
+        return api_video(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem("user_id");
+
+        navigateTo("/login");
+
+        return Promise.reject(refreshError);
+      }
     }
+
+    return Promise.reject(error);
+  }
+);
+
+api_auth.interceptors.request.use(
+  (config) => {
+     
     return config;
   },
   (error) => {
@@ -23,7 +56,7 @@ api.interceptors.request.use(
   }
 );
 
-// Mock API implementation for demonstration
+ 
 const mockDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const mockApi = {
@@ -107,4 +140,4 @@ export const mockApi = {
   }
 };
 
-export default api;
+export { api_auth, api_video };

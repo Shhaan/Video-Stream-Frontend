@@ -9,7 +9,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (user: User, token: string) => void;
+  login: (user: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -32,11 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (userData: User, authToken: string) => {
+  const login = (userData: User) => {
     setUser(userData);
-    setToken(authToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', authToken);
+    localStorage.setItem('user_id', JSON.stringify(userData.id));
+     
   };
 
   const logout = () => {
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         login,
         logout,
-        isAuthenticated: !!token,
+        isAuthenticated: !!localStorage.getItem('user_id'),
         isLoading,
       }}
     >
