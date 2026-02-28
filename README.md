@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🎥 Video Streaming Frontend (React + TypeScript)
 
-# Run and deploy your AI Studio app
+## Overview
 
-This contains everything you need to run your app locally.
+This project is a video streaming frontend application built using React
+and TypeScript.\
+It supports HLS (HTTP Live Streaming) playback for smooth and adaptive
+video streaming in the browser.
 
-View your app in AI Studio: https://ai.studio/apps/f57d2bc6-929e-4dde-adde-28faec986480
+This project focuses purely on frontend implementation.
 
-## Run Locally
+------------------------------------------------------------------------
 
-**Prerequisites:**  Node.js
+## Features
 
+-   HLS video streaming support
+-   Built with React and TypeScript
+-   Modular and reusable component structure
+-   Adaptive bitrate streaming
+-   Clean and scalable folder architecture
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+------------------------------------------------------------------------
+
+## Tech Stack
+
+-   React
+-   TypeScript
+-   HLS (HTTP Live Streaming)
+-   hls.js
+
+------------------------------------------------------------------------
+
+## Project Structure
+
+-   Reusable Video Player component
+-   HLS integration logic
+-   Organized component-based architecture
+
+------------------------------------------------------------------------
+
+## Purpose
+
+This project was created to: - Understand how HLS streaming works in
+frontend applications - Implement adaptive streaming in React - Practice
+TypeScript in real-world media handling scenarios
+
+------------------------------------------------------------------------
+
+## Status
+
+Frontend streaming implementation completed. Backend or streaming server
+integration can be extended in future.
