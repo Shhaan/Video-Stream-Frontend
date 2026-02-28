@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
 import VideoPlayer from './pages/VideoPlayer';
+import Notifications from './pages/Notifications';
 import { setNavigator } from './utils/navigation';
 import { useEffect } from 'react';
 
@@ -39,6 +40,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Upload />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />

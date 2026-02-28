@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { mockApi,api_video } from '../lib/api';
 import { VideoCard } from '../components/VideoCard';
 import { LayoutGrid, List, Filter } from 'lucide-react';
@@ -6,22 +6,41 @@ import { motion } from 'motion/react';
 
 export default function Dashboard() {
   const [videos, setVideos] = useState<any[]>([]);
+  const [next, setNext] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const fetchVideos = async (url: string = "/get-videos/") => {
+    try {
+      const response = await api_video.get(url);
+      setVideos(prev => url === "/get-videos/" ? response.data.results : [...prev, ...response.data.results]);
+      setNext(response.data.next);
+    } catch (error) {
+      console.error('Failed to fetch videos:', error);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const response = await api_video.get("/get-videos/");
-        setVideos(response.data);
-      } catch (error) {
-        console.error('Failed to fetch videos:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchVideos();
   }, []);
 
+  const lastVideoRef = useCallback((node: any) => {
+    if (isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && next) {
+        setIsLoadingMore(true);
+        fetchVideos(next);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, next]);
+
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -66,10 +85,18 @@ export default function Dashboard() {
           animate={{ opacity: 1 }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10"
         >
-          {videos.map((video) => (
-            <VideoCard key={video.id} video={video} />
+          {videos.map((video, index) => (
+            <div key={video.id} ref={index === videos.length - 1 ? lastVideoRef : null}>
+              <VideoCard video={video} />
+            </div>
           ))}
         </motion.div>
+      )}
+
+      {isLoadingMore && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       )}
 
       {!isLoading && videos.length === 0 && (

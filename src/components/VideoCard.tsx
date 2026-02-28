@@ -14,6 +14,18 @@ interface VideoCardProps {
   };
 }
 
+  const formatDuration = (seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    return `${minutes}:${String(secs).padStart(2, '0')}`;
+  };
+
 export function VideoCard(props: any) {
   const { video } = props;
   return (
@@ -23,7 +35,7 @@ export function VideoCard(props: any) {
       whileHover={{ y: -4 }}
       className="group flex flex-col gap-3"
     >
-      <Link to={`/video/${video.id}`} className="relative aspect-video overflow-hidden rounded-xl bg-muted">
+      <Link to={`/video/${video.id}`} className="relative aspect-video overflow-hidden rounded-xl bg-muted border border-border/50">
         <img
           src={video.cover_image}
           alt={video.title}
@@ -36,7 +48,7 @@ export function VideoCard(props: any) {
           </div>
         </div>
         <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-          12:45
+         {formatDuration(video.duration_seconds)}
         </div>
       </Link>
 

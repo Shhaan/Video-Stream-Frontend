@@ -25,7 +25,7 @@ api_video.interceptors.response.use(
         (error.response?.status === 403 &&
           (error.response?.data?.detail ===
             "Authentication credentials were not provided." ||
-            error.response?.data?.detail === "Invalid or expired token"))) &&
+            error.response?.data?.detail === "Invalid or expired token" || error.response?.data?.detail === "User not found"))) &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;

@@ -56,7 +56,7 @@ export default function Register() {
         <div className="bg-card border rounded-2xl p-8 shadow-xl">
           <div className="flex flex-col items-center mb-8">
             <div className="bg-primary p-3 rounded-2xl mb-4">
-              <Video className="w-8 h-8 text-white" />
+              <Video className="w-8 h-8 text-black" />
             </div>
             <h1 className="text-2xl font-display font-bold">Create Account</h1>
             <p className="text-muted-foreground text-center mt-2">
@@ -143,7 +143,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-4"
+              className="w-full h-11 bg-primary text-black font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-4"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

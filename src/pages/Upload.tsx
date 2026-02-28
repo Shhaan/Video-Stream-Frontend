@@ -141,7 +141,7 @@ export default function UploadPage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => { if (dragCounter === 0) fileInputRef.current?.click(); }}
-              className={`relative border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center p-12 text-center cursor-pointer ${
+              className={`relative border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center p-6 sm:p-12 text-center cursor-pointer ${
                 file ? 'border-primary/50 bg-primary/5' : 'border-muted hover:border-primary/50 hover:bg-muted/50'
               }`}
             >
@@ -188,7 +188,7 @@ export default function UploadPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Cover Image</label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {coverPreviewUrl ? (
                   <div className="relative">
                     <img src={coverPreviewUrl} alt="Cover" className="w-32 h-24 object-cover rounded-lg border" />
@@ -275,7 +275,7 @@ export default function UploadPage() {
             <button
               type="submit"
               disabled={isUploading || !file || !title.trim() || !description.trim()}
-              className="w-full h-12 bg-primary text-black font-semibold rounded-xl hover:bg-primary/90   transition-all flex items-center justify-center gap-2"
+              className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
             >
               {isUploading ? (
                 <>

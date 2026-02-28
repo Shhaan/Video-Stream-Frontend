@@ -1,28 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { Video, LogOut, User, Upload, Sun, Moon, Search, Menu } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Video, LogOut, Upload, Search, Menu, X, Bell } from 'lucide-react';
+import { useState } from 'react';
 
 export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) {
-      setIsDarkMode(true);
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -30,23 +14,26 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b bg-gray-50 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-accent rounded-full lg:hidden">
-            <Menu className="w-5 h-5" />
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 hover:bg-accent rounded-full lg:hidden"
+          >
+            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-primary p-1.5 rounded-lg group-hover:scale-110 transition-transform">
+            <div style={{background:'black'}} className="bg-dark p-1.5 rounded-lg group-hover:scale-110 transition-transform">
               <Video className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight hidden sm:block">
+            <span className="font-display font-bold text-xl tracking-tight text-foreground">
               VidStream
             </span>
           </Link>
         </div>
 
-        <div className="hidden md:flex flex-1 max-w-xl mx-8">
+        {/* <div className="hidden md:flex flex-1 max-w-xl mx-8">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -55,17 +42,9 @@ export function Navbar() {
               className="w-full h-10 pl-10 pr-4 rounded-full bg-muted border-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
-        </div>
+        </div> */}
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-            title="Toggle Theme"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
           {isAuthenticated ? (
             <>
               <Link
@@ -75,8 +54,18 @@ export function Navbar() {
               >
                 <Upload className="w-5 h-5" />
               </Link>
-              <div className="flex items-center gap-3 pl-2 border-l">
-                <div className="hidden lg:block text-right">
+              <Link
+                to="/notifications"
+                className="p-2 hover:bg-accent rounded-full transition-colors relative"
+                title="Notifications"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  3
+                </span>
+              </Link>
+              <div className="hidden lg:flex items-center gap-3 pl-2 border-l">
+                <div className="text-right">
                   <p className="text-sm font-medium leading-none">{user?.name}</p>
                   <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
                 </div>
@@ -93,7 +82,7 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors"
+                className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
                 Login
               </Link>
@@ -107,6 +96,78 @@ export function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="lg:hidden border-t bg-gray-50 backdrop-blur">
+          <div className="container mx-auto px-4 py-4 space-y-4">
+            {/* <div className="md:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search videos..."
+                  className="w-full h-10 pl-10 pr-4 rounded-full bg-muted border-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+            </div> */}
+            {isAuthenticated ? (
+              <div className="space-y-2">
+                <Link
+                  to="/upload"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span>Upload Video</span>
+                </Link>
+                <Link
+                  to="/notifications"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg transition-colors relative"
+                >
+                  <Bell className="w-5 h-5" />
+                  <span>Notifications</span>
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    3
+                  </span>
+                </Link>
+                <div className="px-3 py-2 text-sm">
+                  <p className="font-medium">{user?.name}</p>
+                  <p className="text-muted-foreground">{user?.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-3 p-3 w-full text-left hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block p-3 text-foreground hover:bg-accent rounded-lg transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block p-3 bg-primary text-white rounded-lg text-center hover:bg-primary/90 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
