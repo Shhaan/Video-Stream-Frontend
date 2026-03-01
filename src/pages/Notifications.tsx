@@ -1,49 +1,52 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Bell, Heart, MessageSquare, UserPlus, Play } from 'lucide-react';
+import { api_auth } from '../lib/api';
+
+interface NotificationType {
+  id: number;
+  user_id: number;
+  message: string;
+  is_read: boolean;
+}
 
 export default function Notifications() {
-  const notifications = [
-    {
-      id: 1,
-      type: 'like',
-      icon: Heart,
-      message: 'John Doe liked your video "Amazing Sunset"',
-      time: '2 hours ago',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'comment',
-      icon: MessageSquare,
-      message: 'Sarah commented on your video "City Tour"',
-      time: '4 hours ago',
-      read: false,
-    },
-    {
-      id: 3,
-      type: 'follow',
-      icon: UserPlus,
-      message: 'Mike started following you',
-      time: '1 day ago',
-      read: true,
-    },
-    {
-      id: 4,
-      type: 'like',
-      icon: Heart,
-      message: 'Emma liked your video "Cooking Tutorial"',
-      time: '2 days ago',
-      read: true,
-    },
-    {
-      id: 5,
-      type: 'play',
-      icon: Play,
-      message: 'Your video "Travel Vlog" reached 10K views!',
-      time: '3 days ago',
-      read: true,
-    },
-  ];
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await api_auth.get<NotificationType[]>('/api/v1/user/notification/');
+      setNotifications(data);
+    } catch (error) {
+      console.error('failed to fetch notifications', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const markAsRead = async (id: number) => {
+    try {
+      await api_auth.patch(`/api/v1/user/notification/${id}/`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+      );
+    } catch (error) {
+      console.error('failed to mark notification read', error);
+    }
+  };
+
+  const pickIcon = (message: string) => {
+    if (message.includes('liked')) return Heart;
+    if (message.includes('commented')) return MessageSquare;
+    if (message.includes('following') || message.includes('followed')) return UserPlus;
+    if (message.includes('views')) return Play;
+    return Bell;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -58,37 +61,35 @@ export default function Notifications() {
         className="space-y-4"
       >
         {notifications.map((notification) => {
-          const Icon = notification.icon;
+          const Icon = pickIcon(notification.message);
           return (
             <motion.div
               key={notification.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-xl border transition-colors ${
-                notification.read
+              onClick={() => !notification.is_read && markAsRead(notification.id)}
+              className={`p-4 rounded-xl border transition-colors cursor-pointer ${
+                notification.is_read
                   ? 'bg-card border-border'
                   : 'bg-primary/5 border-primary/20'
               }`}
             >
               <div className="flex items-start gap-4">
                 <div className={`p-2 rounded-full ${
-                  notification.read ? 'bg-muted' : 'bg-primary/10'
+                  notification.is_read ? 'bg-muted' : 'bg-primary/10'
                 }`}>
                   <Icon className={`w-4 h-4 ${
-                    notification.read ? 'text-muted-foreground' : 'text-primary'
+                    notification.is_read ? 'text-muted-foreground' : 'text-primary'
                   }`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm leading-relaxed ${
-                    notification.read ? 'text-muted-foreground' : 'text-foreground'
+                    notification.is_read ? 'text-muted-foreground' : 'text-foreground'
                   }`}>
                     {notification.message}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {notification.time}
-                  </p>
                 </div>
-                {!notification.read && (
+                {!notification.is_read && (
                   <div className="w-2 h-2 bg-primary rounded-full shrink-0 mt-2" />
                 )}
               </div>
@@ -97,7 +98,7 @@ export default function Notifications() {
         })}
       </motion.div>
 
-      {notifications.length === 0 && (
+      {!isLoading && notifications.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="bg-muted p-6 rounded-full mb-4">
             <Bell className="w-10 h-10 text-muted-foreground" />
@@ -106,6 +107,12 @@ export default function Notifications() {
           <p className="text-muted-foreground mt-2 max-w-xs">
             When you get likes, comments, or new followers, they'll appear here.
           </p>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
     </div>

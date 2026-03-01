@@ -1,17 +1,36 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import { Video, LogOut, Upload, Search, Menu, X, Bell } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api_auth } from '../lib/api';
 
 export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const fetchNotifCount = async () => {
+    try {
+      const { data } = await api_auth.get('/api/v1/user/notification/count/');
+      setNotifCount(data);
+    } catch (error) {
+      console.error('failed to get notification count', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchNotifCount();
+    } else {
+      setNotifCount(0);
+    }
+  }, [isAuthenticated]);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-gray-50 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60">
@@ -60,9 +79,11 @@ export function Navbar() {
                 title="Notifications"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  3
-                </span>
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notifCount}
+                  </span>
+                )}
               </Link>
               <div className="hidden lg:flex items-center gap-3 pl-2 border-l">
                 <div className="text-right">
@@ -128,9 +149,11 @@ export function Navbar() {
                 >
                   <Bell className="w-5 h-5" />
                   <span>Notifications</span>
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    3
-                  </span>
+                  {notifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {notifCount}
+                    </span>
+                  )}
                 </Link>
                 <div className="px-3 py-2 text-sm">
                   <p className="font-medium">{user?.name}</p>
